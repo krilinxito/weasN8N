@@ -1,0 +1,183 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        -20
+      ],
+      "id": "f54b7e4c-d406-4a8e-9c69-58e67d2987f5",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31d06e8b-26a7-4d0d-9105-4a727827e7a2",
+              "name": "pregunta",
+              "value": "¿Cuánto gastamos en servicios en abril?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        -20
+      ],
+      "id": "fc747110-042b-4182-98e1-3dacb0791d3e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json[\"choices\"][0][\"message\"][\"content\"].replace(/```sql|```|`/g, '').trim() }}\n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        380,
+        -20
+      ],
+      "id": "04e62c2e-b9f6-4cec-9ad8-0d39b3f52c5f",
+      "name": "MySQL",
+      "credentials": {
+        "mySql": {
+          "id": "WEtKqTpEiPhoKzYA",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://n8n.io"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-pro\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Convertí la siguiente pregunta en una consulta SQL válida para MySQL. Usá exclusivamente la tabla llamada `gastos`, con las columnas `id`, `fecha`, `concepto`, `categoria`, y `monto`. Respondé solo con la consulta, sin comentarios ni formato de bloque de código.\\n\\nPregunta: {{ $json.pregunta }}\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        -20
+      ],
+      "id": "8751d466-acec-425e-a65d-1e39d18238a9",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1d7908-b21e-4194-838d-8d08192a5e52",
+              "name": "respuesta",
+              "value": "=\"La suma total de servicios en abril es: {{$json[\"SUM(monto)\"] || 0}} Bs.\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        580,
+        -40
+      ],
+      "id": "1aacafdc-084f-4e12-9702-d67623d630a8",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "MySQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MySQL": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "a86feb96-b83a-4bd9-806c-e37dfba02c5e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0851cc75648561b7164afaa12cf69cfff2962bc2da29c869dc02fa0f3f6a6296"
+  },
+  "id": "jvKH5fBHSsa2FmHu",
+  "tags": []
+}
